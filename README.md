@@ -1,9 +1,56 @@
-# Apartments Price Preditction - Results
-### Goal
-My goal was to build a model capable of predicting prices of apartments in Warsaw.
+# Warsaw Apartment Price Prediction
 
-### Data Source
-The data I will be using comes from Otodom website and I got it using my own [webscraper](https://github.com/mateuszel/otodom-datascraper).
+End-to-end machine-learning project for predicting apartment prices in Warsaw.
+
+The dataset was collected using my own
+[Otodom scraper](https://github.com/mateuszel/otodom-datascraper), then cleaned
+and enriched with location-based and apartment-level features before comparing
+several regression models.
+
+## Pipeline
+
+Scraping → data cleaning → feature engineering → model comparison → evaluation
+
+## Dataset
+
+- Nearly 30,000 listings after preprocessing
+- 13 final features
+- Warsaw apartment listings collected from Otodom
+- Additional filtering and outlier removal before final model comparison
+
+## Models
+
+- Linear, Ridge, Lasso and ElasticNet regression
+- Polynomial regression
+- Decision trees
+- Random Forest
+- Gradient Boosting
+
+## Reported results
+
+The best reported result was obtained with Gradient Boosting:
+
+| Model | RMSE | R² |
+| --- | ---: | ---: |
+| Linear Regression | 352,457 | 0.749 |
+| Random Forest | 226,164 | 0.897 |
+| Gradient Boosting | 178,919 | 0.935 |
+
+These results refer to the historical dataset and experiments documented in
+the notebooks. They should be interpreted as an exploratory modelling result,
+not as a production prediction benchmark.
+
+## Repository structure
+
+- `eda.ipynb` — cleaning, exploratory analysis and feature engineering
+- `model.ipynb` — initial modelling experiments
+- `model_no_outliers.ipynb` — model comparison after outlier removal
+- `geolocation_helpers.py` — helper functions for location-related features
+
+## Detailed analysis
+
+The original exploratory analysis and model-by-model discussion are included
+below.
 
 ### Data Cleaning and EDA (eda.ipynb)
 #### Formatting and cleaning the data
@@ -32,7 +79,7 @@ Most of the data included non-numeric characters, so I had to format it. This al
 
 #### Imputing missing values
 
-Columns that had the most *NaN* values were entirely dropped and all rows with missing values in my target variable column were dropped aswell.
+Columns that had the most *NaN* values were entirely dropped and all rows with missing values in my target variable column were dropped as well.
 
 Methods of imputing missing values in selected columns:
 
@@ -42,16 +89,16 @@ both **area* and *district**, so I imputed missing values by calculating mean **
 
 ![Image 1](img/bal_ter_gar.png)
 
-After that I imputed missing values by calculating the probability of apartment having a **balcony** / **garden** / **terrace** base on its **district** and **floor**. 
+After that I imputed missing values by calculating the probability of apartment having a **balcony** / **garden** / **terrace** based on its **district** and **floor**. 
 * Plotting the relation between **b_type** and **built** allowed me to easily impute missing values based on corresponding **b_type** / **built** column since they are heavily related(as shown below).
 
 ![Image 2](img/btyp.png)
-* In **elevator** column after plotting the data I noticed some incorrext values. I've overriden the previous data by choosing what % of buildings of each height should have an elevator.
+* In **elevator** column after plotting the data I noticed some incorrect values. I overrode the previous data by choosing what % of buildings of each height should have an elevator.
 
 ![Image 3](img/elev.png)
 
 #### Feature Engineering
-Initially I converted **location** column into four new ones: **district**, **subdistrct**, **nbhood**, **street** using ``Geopy``. According to my research, a column **distance** containing distances from apartments to city center is very useful. Because there was too many missing values in **nbood** and **street** I calculated the distances based on subdistrict*. Using ``Google GeoCoding API`` I extracted coordinates of each **subdistrict's** center, then for each apartment I set **distance** to Euclidean distance between its **subdistrict** center and city center + noise.
+Initially I converted **location** column into four new ones: **district**, **subdistrict**, **nbhood**, **street** using ``Geopy``. According to my research, a column **distance** containing distances from apartments to city center is very useful. Because there was too many missing values in **neighbourbood** and **street** I calculated the distances based on subdistrict*. Using ``Google GeoCoding API`` I extracted coordinates of each **subdistrict's** center, then for each apartment I set **distance** to Euclidean distance between its **subdistrict** center and city center + noise.
 
 #### Outliers and incorrect values
 My last step was handling outliers and looking for incorrect data. There weren't many outliers, some of them I handled one by one, some of them were dropped. The same goes for incorrect data. After that my dataset was ready for modelling. 
@@ -99,8 +146,8 @@ As we can see the model doesn't perform perfectly with RMSE being very high. How
 ![Image 3](img/linreg.png)
 
 After inspecting these plots we can see that the model clearly has trouble with predicting apartments that have bigger value. \
-Additionally we can see that the model generalises pretty well, but it's too simple to learn all paterns in data(slow growth of validation curve). \
-Since the model is not overfitting it's not a surprise that Ridge, Lasso and ElasticNet provided the same results, I don't think it was neccessary to even test them. 
+Additionally we can see that the model generalises pretty well, but it's too simple to learn all patterns in data(slow growth of validation curve). \
+Since the model is not overfitting it's not a surprise that Ridge, Lasso and ElasticNet provided the same results, I don't think it was necessary to even test them. 
 
 #### Polynomial Regression with degree=2
 
@@ -113,7 +160,7 @@ Since the model is not overfitting it's not a surprise that Ridge, Lasso and Ela
 | RMSE      | 284670.35          |
 | R²        | 0.8363             |
 
-At first it looks like this model perform better than any previous ones. RMSE is lower and R^2 is higher. Let's take a look at residuals and learning curves. 
+At first it looks like this model performs better than any previous ones. RMSE is lower and R^2 is higher. Let's take a look at residuals and learning curves. 
 
 ![Image 4](img/poly2linreg.png)
 
@@ -168,7 +215,7 @@ This model takes much more computation time than previous ones and performs much
 
 ![Image 7](img/poly3linreg.png)
 
-The above plots confirm that the model is overtfitted. Let's try using Ridge Regression to avoid that.
+The above plots confirm that the model is overfitted. Let's try using Ridge Regression to avoid that.
 
 ##### Polynomial Regression with Ridge Regression
 
